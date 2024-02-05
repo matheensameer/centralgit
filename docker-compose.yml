@@ -1,0 +1,50 @@
+  GNU nano 6.2                                                              docker-compose.yml                                                                        version: "3.1"
+
+services:
+
+# Configure MariaDB with persistent storage
+# Need to init the db
+  mysqldb:
+    image: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: P43yhVdRyeb8td7vn
+      MYSQL_DATABASE: 'guacamole_db'
+      MYSQL_USER: 'guacamole_user'
+      MYSQL_PASSWORD: P43yhVdRyeb#8td7vn
+    container_name: mysqldb
+    volumes:
+      - "db:/var/lib/mysql"
+
+# Configure proxy daemon
+  guacd:
+    image: guacamole/guacd
+    container_name: guacd
+    restart: unless-stopped
+
+# Configure and link Guacamole to db and proxy
+  guacamole:
+    image: guacamole/guacamole
+    container_name: guacamole
+    restart: unless-stopped
+    depends_on:
+      - mysqldb
+      - guacd
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_HOSTNAME: mysqldb
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacamole_user
+      MYSQL_PASSWORD: P43yhVdRyeb#8td7vn
+      TOTP_ENABLED: "true"
+      GUACAMOLE_HOME: /opt/guacamole
+      WEBAPP_CONTEXT: ROOT
+    ports:
+      - 8080:8080
+    volumes:
+      - guacamole-home:/opt/guacamole
+
+# This volume has to be created before docker-compose up
+volumes:
+  db:
+  guacamole-home:
